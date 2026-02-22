@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 200 30% 97%;
+    --foreground: 210 25% 15%;
+
+    --card: 200 25% 99%;
+    --card-foreground: 210 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 25% 15%;
+
+    --primary: 199 85% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 195 60% 92%;
+    --secondary-foreground: 200 50% 30%;
+
+    --muted: 200 20% 94%;
+    --muted-foreground: 210 10% 55%;
+
+    --accent: 174 60% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 20% 90%;
+    --input: 200 20% 90%;
+    --ring: 199 85% 52%;
+
+    --radius: 1rem;
+
+    /* Custom BebUp tokens */
+    --water-light: 199 90% 94%;
+    --water-medium: 199 85% 65%;
+    --water-dark: 199 80% 42%;
+    --water-gradient: linear-gradient(135deg, hsl(199, 85%, 52%), hsl(174, 60%, 48%));
+    --water-gradient-soft: linear-gradient(180deg, hsl(200, 30%, 97%), hsl(199, 90%, 96%));
+    --success: 152 60% 48%;
+    --success-foreground: 0 0% 100%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Nunito', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  #root {
+    min-height: 100dvh;
+  }
+}
+
+@layer utilities {
+  .water-gradient {
+    background: var(--water-gradient);
+  }
+
+  .water-gradient-soft {
+    background: var(--water-gradient-soft);
+  }
+
+  .text-water-dark {
+    color: hsl(var(--water-dark));
+  }
+
+  .bg-water-light {
+    background-color: hsl(var(--water-light));
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
