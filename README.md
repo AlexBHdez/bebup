@@ -41,8 +41,49 @@ npm test
 
 ## Push limitations
 
-- Real Web Push (server-triggered delivery) requires backend infrastructure and push subscriptions (not included here).
-- Without backend, there is no remote delivery while the app is closed.
+- Real Web Push (server-triggered delivery) requires backend infrastructure and push subscriptions.
+- This repository includes the backend endpoints, but delivery still depends on correct Vercel env vars, database setup, and browser support.
+
+## Push backend setup (Vercel)
+
+This repository includes serverless endpoints in `/api/push/*` and a scheduler (`vercel.json` cron) for Web Push delivery.
+
+### 1) Create VAPID keys
+
+Run once:
+
+```sh
+npx web-push generate-vapid-keys
+```
+
+Copy values into Vercel project environment variables:
+
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VITE_VAPID_PUBLIC_KEY` (same value as `VAPID_PUBLIC_KEY`, exposed to client)
+- `PUSH_DISPATCH_SECRET` (random long secret for manual send/dispatch endpoints)
+- `DATABASE_URL` (Postgres connection string)
+
+### 2) Create database table
+
+Run SQL from:
+
+- `database/schema.sql`
+
+### 3) API endpoints
+
+- `POST /api/push/subscribe`
+- `POST /api/push/unsubscribe`
+- `GET /api/push/status?deviceId=...`
+- `POST /api/push/send` (manual test, requires `Authorization: Bearer <PUSH_DISPATCH_SECRET>`)
+- `POST /api/push/dispatch` (cron dispatch every 15 minutes)
+
+### 4) Deploy and verify
+
+1. Deploy to Vercel.
+2. Open Settings in the app and enable push.
+3. Confirm subscription row exists in `push_subscriptions`.
+4. Test manual send with `/api/push/send`.
 
 ## iOS (Add to Home Screen)
 

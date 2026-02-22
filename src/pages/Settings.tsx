@@ -2,6 +2,16 @@ import { motion } from "framer-motion";
 import { User, GlassWater, Bell, Moon, Sun, RotateCcw } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { useHydration } from "@/hooks/useHydration";
+import { useEffect, useMemo, useState } from "react";
+import {
+  getCurrentPushSubscription,
+  getNotificationPermission,
+  getPushSupport,
+  requestPushPermission,
+  subscribeToPush,
+  syncPushSubscription,
+  unsubscribeFromPush,
+} from "@/lib/push/client";
 
 const GLASS_SIZES = [200, 250, 300, 350];
 const INTERVALS = [
@@ -15,11 +25,102 @@ const INTERVALS = [
 const Settings = () => {
   const { settings, updateSettings } = useHydration();
   const totalLiters = ((settings.dailyGoal * settings.glassSize) / 1000).toFixed(1);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">("unsupported");
+  const [pushError, setPushError] = useState<string | null>(null);
+
+  const pushSupported = useMemo(() => getPushSupport().supported, []);
 
   const handleReset = () => {
     if (confirm("¿Estás seguro? Se borrará toda tu configuración.")) {
       localStorage.clear();
       window.location.reload();
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadPushState = async () => {
+      if (!pushSupported) {
+        setPushPermission("unsupported");
+        return;
+      }
+
+      setPushPermission(getNotificationPermission());
+
+      try {
+        const subscription = await getCurrentPushSubscription();
+        if (mounted) {
+          setPushEnabled(Boolean(subscription));
+        }
+      } catch {
+        if (mounted) {
+          setPushEnabled(false);
+        }
+      }
+    };
+
+    void loadPushState();
+
+    return () => {
+      mounted = false;
+    };
+  }, [pushSupported]);
+
+  useEffect(() => {
+    if (!pushEnabled) {
+      return;
+    }
+
+    void syncPushSubscription(settings).catch(() => undefined);
+  }, [
+    pushEnabled,
+    settings.remindersEnabled,
+    settings.reminderInterval,
+    settings.wakeTime,
+    settings.sleepTime,
+  ]);
+
+  const handleEnablePush = async () => {
+    setPushBusy(true);
+    setPushError(null);
+
+    try {
+      let permission = getNotificationPermission();
+      if (permission === "default") {
+        permission = await requestPushPermission();
+      }
+
+      setPushPermission(permission);
+
+      if (permission !== "granted") {
+        setPushError("No se concedió permiso para notificaciones.");
+        return;
+      }
+
+      await subscribeToPush(settings);
+      setPushEnabled(true);
+      updateSettings({ remindersEnabled: true });
+    } catch (error) {
+      setPushError(error instanceof Error ? error.message : "No se pudo activar push.");
+    } finally {
+      setPushBusy(false);
+    }
+  };
+
+  const handleDisablePush = async () => {
+    setPushBusy(true);
+    setPushError(null);
+
+    try {
+      await unsubscribeFromPush();
+      setPushEnabled(false);
+    } catch (error) {
+      setPushError(error instanceof Error ? error.message : "No se pudo desactivar push.");
+    } finally {
+      setPushBusy(false);
     }
   };
 
@@ -138,6 +239,19 @@ const Settings = () => {
         {/* Reminder interval */}
         <div className="surface-card p-5">
           <p className="font-bold text-foreground text-sm mb-3">Frecuencia de recordatorios</p>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm text-muted-foreground">Recordatorios</span>
+            <button
+              onClick={() => updateSettings({ remindersEnabled: !settings.remindersEnabled })}
+              className={`select-pill px-3 py-1.5 min-h-9 ${
+                settings.remindersEnabled
+                  ? "water-gradient text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {settings.remindersEnabled ? "Activados" : "Desactivados"}
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {INTERVALS.map((interval) => (
               <button
@@ -152,6 +266,40 @@ const Settings = () => {
                 {interval.label}
               </button>
             ))}
+          </div>
+          <div className="mt-4 pt-4 border-t border-border">
+            <p className="font-bold text-foreground text-sm mb-2">Notificaciones push</p>
+            {!pushSupported ? (
+              <p className="text-xs text-muted-foreground">Tu navegador no soporta push.</p>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Estado: {pushEnabled ? "Activo" : "Inactivo"} · Permiso: {pushPermission}
+                </p>
+                <div className="flex gap-2">
+                  {!pushEnabled ? (
+                    <button
+                      onClick={handleEnablePush}
+                      disabled={pushBusy}
+                      className="select-pill px-4 py-2 water-gradient text-primary-foreground disabled:opacity-60"
+                    >
+                      {pushBusy ? "Activando..." : "Activar push"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleDisablePush}
+                      disabled={pushBusy}
+                      className="select-pill px-4 py-2 bg-muted text-foreground disabled:opacity-60"
+                    >
+                      {pushBusy ? "Desactivando..." : "Desactivar push"}
+                    </button>
+                  )}
+                </div>
+                {pushError && (
+                  <p className="text-xs text-destructive">{pushError}</p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

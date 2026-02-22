@@ -7,7 +7,7 @@ import { useHydration } from "@/hooks/useHydration";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { getProgressMessage } from "@/lib/hydration/messages";
-import { startReminderLoop } from "@/lib/hydration/reminders";
+import { hasActivePushSubscription, startReminderLoop } from "@/lib/hydration/reminders";
 
 const Dashboard = () => {
   const { settings, todayLog, addGlass, undoGlass } = useHydration();
@@ -20,7 +20,27 @@ const Dashboard = () => {
   }, [settings.onboarded, navigate]);
 
   useEffect(() => {
-    return startReminderLoop(settings);
+    let cleanup = () => undefined;
+    let cancelled = false;
+
+    const setup = async () => {
+      const hasPush = await hasActivePushSubscription();
+      if (cancelled) {
+        return;
+      }
+
+      // Keep local reminders only as fallback when push subscription is not active.
+      if (!hasPush) {
+        cleanup = startReminderLoop(settings);
+      }
+    };
+
+    void setup();
+
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
   }, [settings]);
 
   const message = getProgressMessage(todayLog.glasses, settings.dailyGoal);
