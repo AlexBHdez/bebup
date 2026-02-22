@@ -6,20 +6,8 @@ import BottomNav from "@/components/BottomNav";
 import { useHydration } from "@/hooks/useHydration";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-
-const MESSAGES = [
-  { min: 0, max: 0.2, text: "¡Empieza tu día con un vaso! 💧", emoji: "🌅" },
-  { min: 0.2, max: 0.4, text: "¡Buen inicio! Sigue así 💪", emoji: "😊" },
-  { min: 0.4, max: 0.6, text: "¡Vas por la mitad! Genial 🎯", emoji: "🚀" },
-  { min: 0.6, max: 0.8, text: "¡Casi llegas! Un vasito más 💧", emoji: "✨" },
-  { min: 0.8, max: 1.0, text: "¡Ya casi! Último esfuerzo 🏆", emoji: "💪" },
-  { min: 1.0, max: Infinity, text: "¡Meta cumplida! Increíble 🎉", emoji: "🏆" },
-];
-
-function getMessage(current: number, goal: number) {
-  const ratio = goal > 0 ? current / goal : 0;
-  return MESSAGES.find((m) => ratio >= m.min && ratio < m.max) || MESSAGES[0];
-}
+import { getProgressMessage } from "@/lib/hydration/messages";
+import { startReminderLoop } from "@/lib/hydration/reminders";
 
 const Dashboard = () => {
   const { settings, todayLog, addGlass, undoGlass } = useHydration();
@@ -31,7 +19,11 @@ const Dashboard = () => {
     }
   }, [settings.onboarded, navigate]);
 
-  const message = getMessage(todayLog.glasses, settings.dailyGoal);
+  useEffect(() => {
+    return startReminderLoop(settings);
+  }, [settings]);
+
+  const message = getProgressMessage(todayLog.glasses, settings.dailyGoal);
   const remaining = Math.max(0, settings.dailyGoal - todayLog.glasses);
   const totalMl = todayLog.glasses * settings.glassSize;
 

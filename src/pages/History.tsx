@@ -2,27 +2,15 @@ import { motion } from "framer-motion";
 import { Droplets, Flame, TrendingUp } from "lucide-react";
 import BottomNav from "@/components/BottomNav";
 import { useHydration } from "@/hooks/useHydration";
+import { formatHistoryDate, getCompletedDays, getRecentLogs } from "@/lib/hydration/history";
 
 const History = () => {
-  const { logs, getStreak, settings } = useHydration();
+  const { logs, getStreak } = useHydration();
   const streak = getStreak();
 
-  const sortedLogs = [...logs].sort((a, b) => b.date.localeCompare(a.date));
+  const sortedLogs = getRecentLogs(logs);
 
-  const completedDays = logs.filter((l) => l.glasses >= l.goal).length;
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + "T12:00:00");
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
-
-    if (dateStr === todayStr) return "Hoy";
-    if (dateStr === yesterdayStr) return "Ayer";
-    return date.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
-  };
+  const completedDays = getCompletedDays(logs);
 
   return (
     <div className="flex flex-col min-h-dvh water-gradient-soft pb-20">
@@ -36,7 +24,7 @@ const History = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-card rounded-2xl p-4 border border-border"
+          className="surface-card p-4"
         >
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
@@ -50,7 +38,7 @@ const History = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-card rounded-2xl p-4 border border-border"
+          className="surface-card p-4"
         >
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-full bg-water-light flex items-center justify-center">
@@ -86,7 +74,8 @@ const History = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="bg-card rounded-2xl p-4 border border-border flex items-center gap-4"
+                  data-testid="history-row"
+                  className="surface-card p-4 flex items-center gap-4"
                 >
                   <div
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -98,7 +87,7 @@ const History = () => {
                     {completed ? "✓" : `${Math.round(pct)}%`}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-foreground text-sm">{formatDate(log.date)}</p>
+                    <p className="font-bold text-foreground text-sm">{formatHistoryDate(log.date)}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
                         <motion.div

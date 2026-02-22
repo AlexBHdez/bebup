@@ -102,3 +102,17 @@
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
+
+@layer components {
+  .surface-card {
+    @apply bg-card rounded-2xl border border-border;
+  }
+
+  .icon-chip {
+    @apply w-9 h-9 rounded-full bg-water-light flex items-center justify-center;
+  }
+
+  .select-pill {
+    @apply rounded-xl font-semibold text-sm transition-all min-h-10;
+  }
+}

@@ -1,73 +1,50 @@
-# Welcome to your Lovable project
+# BebUp Hydration
 
-## Project info
+Hydration app built with Vite + React + TypeScript.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Local development
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Production build
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+npm run build
+```
 
-**Use GitHub Codespaces**
+## Tests
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm test
+```
 
-## What technologies are used for this project?
+## Local PWA validation
 
-This project is built with:
+- The app includes `manifest.webmanifest` and a service worker (`/public/sw.js`) for static asset offline caching.
+- The service worker is registered only in `production`.
+- To validate PWA locally:
+  1. Run `npm run build`.
+  2. Serve `dist/` with a static server (for example `npm run preview`).
+  3. Open DevTools > Application and verify `Manifest` and `Service Workers`.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Reminders and notifications
 
-## How can I deploy this project?
+- Reminder settings (schedule/interval) are persisted in app settings.
+- The reminder loop uses Web Notifications only when:
+  - `Notification` API is supported,
+  - permission is `granted`,
+  - and current time is inside the configured wake/sleep window.
+- This repository does not include a push backend; notification behavior is local-only on client side.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Push limitations
 
-## Can I connect a custom domain to my Lovable project?
+- Real Web Push (server-triggered delivery) requires backend infrastructure and push subscriptions (not included here).
+- Without backend, there is no remote delivery while the app is closed.
 
-Yes, you can!
+## iOS (Add to Home Screen)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- On iOS Safari, use **Share > Add to Home Screen** to install the web app.
+- Notification capabilities depend on iOS version and device conditions.

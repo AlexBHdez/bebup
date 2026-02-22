@@ -13,6 +13,7 @@ const WaterButton = ({ onClick, disabled }: WaterButtonProps) => {
       whileHover={{ scale: 1.04 }}
       onClick={onClick}
       disabled={disabled}
+      aria-label="Agregar vaso de agua"
       className="water-gradient text-primary-foreground rounded-full w-[72px] h-[72px] flex items-center justify-center shadow-lg shadow-primary/25 active:shadow-md transition-shadow disabled:opacity-50"
     >
       <Plus size={32} strokeWidth={2.5} />

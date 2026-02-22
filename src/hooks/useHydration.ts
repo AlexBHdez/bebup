@@ -1,58 +1,18 @@
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { calculateGoal } from "@/lib/hydration/calculations";
+import { getTodayKey } from "@/lib/hydration/date";
+import { decrementLogForDate, incrementLogForDate } from "@/lib/hydration/logs";
+import { calculateCurrentStreak } from "@/lib/hydration/streaks";
+import {
+  buildTodayLog,
+  loadLogs,
+  loadSettings,
+  saveLogs as saveLogsToStorage,
+  saveSettings as saveSettingsToStorage,
+} from "@/lib/hydration/storage";
+import type { DayLog, HydrationSettings } from "@/lib/hydration/types";
 
-export interface DayLog {
-  date: string;
-  glasses: number;
-  goal: number;
-}
-
-export interface HydrationSettings {
-  weight: number;
-  glassSize: number;
-  dailyGoal: number;
-  wakeTime: string;
-  sleepTime: string;
-  remindersEnabled: boolean;
-  reminderInterval: number; // minutes
-  onboarded: boolean;
-}
-
-const DEFAULT_SETTINGS: HydrationSettings = {
-  weight: 70,
-  glassSize: 250,
-  dailyGoal: 8,
-  wakeTime: "07:00",
-  sleepTime: "23:00",
-  remindersEnabled: true,
-  reminderInterval: 60,
-  onboarded: false,
-};
-
-function getToday(): string {
-  return new Date().toISOString().split("T")[0];
-}
-
-function calculateGoal(weight: number, glassSize: number): number {
-  // ~35ml per kg of body weight
-  const totalMl = weight * 35;
-  return Math.round(totalMl / glassSize);
-}
-
-function loadSettings(): HydrationSettings {
-  try {
-    const raw = localStorage.getItem("bebup-settings");
-    if (raw) return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
-  } catch {}
-  return DEFAULT_SETTINGS;
-}
-
-function loadLogs(): DayLog[] {
-  try {
-    const raw = localStorage.getItem("bebup-logs");
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return [];
-}
+export type { DayLog, HydrationSettings } from "@/lib/hydration/types";
 
 export function useHydration() {
   const [settings, setSettingsState] = useState<HydrationSettings>(loadSettings);
@@ -60,12 +20,12 @@ export function useHydration() {
 
   const saveSettings = useCallback((s: HydrationSettings) => {
     setSettingsState(s);
-    localStorage.setItem("bebup-settings", JSON.stringify(s));
+    saveSettingsToStorage(s);
   }, []);
 
   const saveLogs = useCallback((l: DayLog[]) => {
     setLogsState(l);
-    localStorage.setItem("bebup-logs", JSON.stringify(l));
+    saveLogsToStorage(l);
   }, []);
 
   const updateSettings = useCallback(
@@ -79,55 +39,23 @@ export function useHydration() {
     [settings, saveSettings]
   );
 
-  const todayLog = logs.find((l) => l.date === getToday()) || {
-    date: getToday(),
-    glasses: 0,
-    goal: settings.dailyGoal,
-  };
+  const todayLog = useMemo(
+    () => buildTodayLog(logs, settings.dailyGoal, getTodayKey()),
+    [logs, settings.dailyGoal]
+  );
 
   const addGlass = useCallback(() => {
-    const today = getToday();
-    const existing = logs.find((l) => l.date === today);
-    if (existing) {
-      saveLogs(
-        logs.map((l) =>
-          l.date === today ? { ...l, glasses: l.glasses + 1 } : l
-        )
-      );
-    } else {
-      saveLogs([...logs, { date: today, glasses: 1, goal: settings.dailyGoal }]);
-    }
+    const today = getTodayKey();
+    saveLogs(incrementLogForDate(logs, today, settings.dailyGoal));
   }, [logs, settings.dailyGoal, saveLogs]);
 
   const undoGlass = useCallback(() => {
-    const today = getToday();
-    const existing = logs.find((l) => l.date === today);
-    if (existing && existing.glasses > 0) {
-      saveLogs(
-        logs.map((l) =>
-          l.date === today ? { ...l, glasses: l.glasses - 1 } : l
-        )
-      );
-    }
+    const today = getTodayKey();
+    saveLogs(decrementLogForDate(logs, today));
   }, [logs, saveLogs]);
 
   const getStreak = useCallback(() => {
-    let streak = 0;
-    const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date));
-    const today = getToday();
-
-    for (const log of sorted) {
-      const expected = new Date(today);
-      expected.setDate(expected.getDate() - streak);
-      const expectedStr = expected.toISOString().split("T")[0];
-
-      if (log.date === expectedStr && log.glasses >= log.goal) {
-        streak++;
-      } else if (log.date === expectedStr) {
-        break;
-      }
-    }
-    return streak;
+    return calculateCurrentStreak(logs, getTodayKey());
   }, [logs]);
 
   return {

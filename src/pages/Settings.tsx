@@ -47,9 +47,9 @@ const Settings = () => {
         </motion.div>
 
         {/* Weight */}
-        <div className="bg-card rounded-2xl p-5 border border-border">
+        <div className="surface-card p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-full bg-water-light flex items-center justify-center">
+            <div className="icon-chip">
               <User size={18} className="text-primary" />
             </div>
             <div>
@@ -73,9 +73,9 @@ const Settings = () => {
         </div>
 
         {/* Glass size */}
-        <div className="bg-card rounded-2xl p-5 border border-border">
+        <div className="surface-card p-5">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-full bg-water-light flex items-center justify-center">
+            <div className="icon-chip">
               <GlassWater size={18} className="text-primary" />
             </div>
             <div>
@@ -87,7 +87,7 @@ const Settings = () => {
               <button
                 key={size}
                 onClick={() => updateSettings({ glassSize: size })}
-                className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all ${
+                className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all min-h-10 ${
                   settings.glassSize === size
                     ? "water-gradient text-primary-foreground shadow-md shadow-primary/20"
                     : "bg-muted text-muted-foreground"
@@ -100,9 +100,9 @@ const Settings = () => {
         </div>
 
         {/* Schedule */}
-        <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
+        <div className="surface-card p-5 space-y-3">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-full bg-water-light flex items-center justify-center">
+            <div className="icon-chip">
               <Bell size={18} className="text-primary" />
             </div>
             <div>
@@ -136,14 +136,14 @@ const Settings = () => {
         </div>
 
         {/* Reminder interval */}
-        <div className="bg-card rounded-2xl p-5 border border-border">
+        <div className="surface-card p-5">
           <p className="font-bold text-foreground text-sm mb-3">Frecuencia de recordatorios</p>
           <div className="flex flex-wrap gap-2">
             {INTERVALS.map((interval) => (
               <button
                 key={interval.value}
                 onClick={() => updateSettings({ reminderInterval: interval.value })}
-                className={`py-2 px-4 rounded-xl font-semibold text-sm transition-all ${
+                className={`select-pill py-2 px-4 ${
                   settings.reminderInterval === interval.value
                     ? "water-gradient text-primary-foreground shadow-md shadow-primary/20"
                     : "bg-muted text-muted-foreground"
@@ -158,7 +158,7 @@ const Settings = () => {
         {/* Reset */}
         <button
           onClick={handleReset}
-          className="w-full flex items-center justify-center gap-2 text-destructive font-semibold text-sm py-4 rounded-2xl bg-card border border-border"
+          className="w-full min-h-11 flex items-center justify-center gap-2 text-destructive font-semibold text-sm py-4 rounded-2xl bg-card border border-border"
         >
           <RotateCcw size={16} />
           Reiniciar configuración
