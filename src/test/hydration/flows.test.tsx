@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import App from "@/App";
 import type { DayLog, HydrationSettings } from "@/lib/hydration/types";
@@ -12,7 +12,6 @@ const defaultSettings: HydrationSettings = {
   wakeTime: "07:00",
   sleepTime: "23:00",
   remindersEnabled: true,
-  reminderInterval: 60,
   onboarded: true,
 };
 
@@ -24,6 +23,7 @@ function setHydrationStorage(settings: HydrationSettings, logs: DayLog[] = []) {
 describe("hydration critical flows", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it("saves onboarding settings and computes daily target", async () => {
@@ -57,6 +57,12 @@ describe("hydration critical flows", () => {
 
   it("logging + undo updates dashboard state and local storage", async () => {
     setHydrationStorage(defaultSettings, []);
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ error: "No push subscription found for this device." }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      }));
 
     window.history.pushState({}, "", "/");
     render(<App />);
@@ -71,6 +77,12 @@ describe("hydration critical flows", () => {
       expect(logs[0].glasses).toBe(1);
       expect(logs[0].date).toBe(getTodayKey());
     });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/push/schedule-next",
+      expect.objectContaining({ method: "POST" })
+    );
+    expect(await screen.findByText(/activa push para recibir recordatorios automáticos/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /deshacer último vaso/i }));
 

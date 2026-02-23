@@ -1,8 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
 import { calculateGoal } from "@/lib/hydration/calculations";
+import { toast } from "@/components/ui/use-toast";
 import { getTodayKey } from "@/lib/hydration/date";
 import { decrementLogForDate, incrementLogForDate } from "@/lib/hydration/logs";
 import { calculateCurrentStreak } from "@/lib/hydration/streaks";
+import { PushApiError, scheduleNextHydrationReminder } from "@/lib/push/client";
 import {
   buildTodayLog,
   loadLogs,
@@ -47,7 +49,26 @@ export function useHydration() {
   const addGlass = useCallback(() => {
     const today = getTodayKey();
     saveLogs(incrementLogForDate(logs, today, settings.dailyGoal));
-  }, [logs, settings.dailyGoal, saveLogs]);
+
+    if (!settings.remindersEnabled) {
+      return;
+    }
+
+    void scheduleNextHydrationReminder().catch((error) => {
+      if (error instanceof PushApiError && error.status === 404) {
+        toast({
+          title: "Activa push",
+          description: "Activa push para recibir recordatorios automáticos.",
+        });
+        return;
+      }
+
+      toast({
+        title: "No se pudo programar el recordatorio",
+        description: "Inténtalo de nuevo en unos minutos.",
+      });
+    });
+  }, [logs, settings.dailyGoal, settings.remindersEnabled, saveLogs]);
 
   const undoGlass = useCallback(() => {
     const today = getTodayKey();

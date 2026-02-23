@@ -18,6 +18,5 @@ export const DEFAULT_SETTINGS: HydrationSettings = {
   wakeTime: "07:00",
   sleepTime: "23:00",
   remindersEnabled: true,
-  reminderInterval: 60,
   onboarded: false,
 };

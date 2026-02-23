@@ -11,6 +11,5 @@ export interface HydrationSettings {
   wakeTime: string;
   sleepTime: string;
   remindersEnabled: boolean;
-  reminderInterval: number;
   onboarded: boolean;
 }

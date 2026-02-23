@@ -32,7 +32,7 @@ npm test
 
 ## Reminders and notifications
 
-- Reminder settings (schedule/interval) are persisted in app settings.
+- Reminder settings (enabled + wake/sleep window) are persisted in app settings.
 - The reminder loop uses Web Notifications only when:
   - `Notification` API is supported,
   - permission is `granted`,
@@ -74,6 +74,7 @@ Run SQL from:
 
 - `POST /api/push/subscribe`
 - `POST /api/push/unsubscribe`
+- `POST /api/push/schedule-next`
 - `GET /api/push/status?deviceId=...`
 - `POST /api/push/send` (manual test, requires `Authorization: Bearer <PUSH_DISPATCH_SECRET>`)
 - `POST /api/push/dispatch` (cron dispatch every 15 minutes)

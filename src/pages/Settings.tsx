@@ -14,13 +14,6 @@ import {
 } from "@/lib/push/client";
 
 const GLASS_SIZES = [200, 250, 300, 350];
-const INTERVALS = [
-  { value: 30, label: "30 min" },
-  { value: 45, label: "45 min" },
-  { value: 60, label: "1 hora" },
-  { value: 90, label: "1.5 horas" },
-  { value: 120, label: "2 horas" },
-];
 
 const Settings = () => {
   const { settings, updateSettings } = useHydration();
@@ -78,7 +71,6 @@ const Settings = () => {
   }, [
     pushEnabled,
     settings.remindersEnabled,
-    settings.reminderInterval,
     settings.wakeTime,
     settings.sleepTime,
   ]);
@@ -236,9 +228,9 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Reminder interval */}
+        {/* Reminders */}
         <div className="surface-card p-5">
-          <p className="font-bold text-foreground text-sm mb-3">Frecuencia de recordatorios</p>
+          <p className="font-bold text-foreground text-sm mb-3">Recordatorios</p>
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-muted-foreground">Recordatorios</span>
             <button
@@ -252,21 +244,9 @@ const Settings = () => {
               {settings.remindersEnabled ? "Activados" : "Desactivados"}
             </button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {INTERVALS.map((interval) => (
-              <button
-                key={interval.value}
-                onClick={() => updateSettings({ reminderInterval: interval.value })}
-                className={`select-pill py-2 px-4 ${
-                  settings.reminderInterval === interval.value
-                    ? "water-gradient text-primary-foreground shadow-md shadow-primary/20"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {interval.label}
-              </button>
-            ))}
-          </div>
+          <p className="text-xs text-muted-foreground">
+            Te recordaremos una hora después del último vaso dentro de tu horario despierto.
+          </p>
           <div className="mt-4 pt-4 border-t border-border">
             <p className="font-bold text-foreground text-sm mb-2">Notificaciones push</p>
             {!pushSupported ? (

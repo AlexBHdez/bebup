@@ -1,7 +1,7 @@
 import { getDbPool } from "../_lib/db.js";
 import { isAuthorized, isCronRequest } from "../_lib/env.js";
 import { sendPushNotification } from "../_lib/push.js";
-import { nowInTimeZone, shouldSendReminder } from "../_lib/schedule.js";
+import { shouldSendByDueAt } from "../_lib/schedule.js";
 import { sendInternalError } from "../_lib/error.js";
 
 export default async function handler(req: any, res: any) {
@@ -18,9 +18,11 @@ export default async function handler(req: any, res: any) {
     const pool = getDbPool();
     const result = await pool.query(
       `
-        SELECT id, endpoint, p256dh, auth, timezone, reminder_interval, wake_time, sleep_time, reminders_enabled, last_sent_at
+        SELECT id, endpoint, p256dh, auth, next_due_at
         FROM push_subscriptions
         WHERE reminders_enabled = true
+          AND next_due_at IS NOT NULL
+          AND next_due_at <= NOW()
       `
     );
 
@@ -31,14 +33,7 @@ export default async function handler(req: any, res: any) {
     let failed = 0;
 
     for (const row of result.rows) {
-      const zonedNow = nowInTimeZone(now, row.timezone || "UTC");
-
-      const shouldSend = shouldSendReminder(zonedNow, {
-        reminderInterval: Number(row.reminder_interval),
-        wakeTime: row.wake_time,
-        sleepTime: row.sleep_time,
-        lastSentAt: row.last_sent_at ? new Date(row.last_sent_at) : null,
-      });
+      const shouldSend = shouldSendByDueAt(now, row.next_due_at ? new Date(row.next_due_at) : null);
 
       if (!shouldSend) {
         skipped += 1;
@@ -60,7 +55,10 @@ export default async function handler(req: any, res: any) {
           }
         );
 
-        await pool.query(`UPDATE push_subscriptions SET last_sent_at = NOW(), updated_at = NOW() WHERE id = $1`, [row.id]);
+        await pool.query(
+          `UPDATE push_subscriptions SET last_sent_at = NOW(), next_due_at = NULL, updated_at = NOW() WHERE id = $1`,
+          [row.id]
+        );
         sent += 1;
       } catch (error: any) {
         const statusCode = error?.statusCode;

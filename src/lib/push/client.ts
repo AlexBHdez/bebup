@@ -1,10 +1,21 @@
 import type { HydrationSettings } from "@/lib/hydration/types";
 
 const DEVICE_ID_KEY = "bebup-device-id";
+const DEFAULT_REMINDER_DELAY_MINUTES = 60;
 
 interface PushSupport {
   supported: boolean;
   reason?: string;
+}
+
+export class PushApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = "PushApiError";
+    this.status = status;
+  }
 }
 
 function toUint8Array(base64String: string): Uint8Array {
@@ -78,15 +89,25 @@ async function postJson(url: string, payload: unknown): Promise<void> {
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed: ${response.status}`);
+    const body = await response.text();
+    let message = body;
+
+    try {
+      const parsed = JSON.parse(body) as { error?: string };
+      if (parsed?.error) {
+        message = parsed.error;
+      }
+    } catch {
+      // Ignore parse errors and keep raw response text.
+    }
+
+    throw new PushApiError(response.status, message || `Request failed: ${response.status}`);
   }
 }
 
 function settingsPayload(settings: HydrationSettings) {
   return {
     remindersEnabled: settings.remindersEnabled,
-    reminderInterval: settings.reminderInterval,
     wakeTime: settings.wakeTime,
     sleepTime: settings.sleepTime,
   };
@@ -151,6 +172,42 @@ export async function syncPushSubscription(settings: HydrationSettings): Promise
     settings: settingsPayload(settings),
     subscription: subscription.toJSON(),
   });
+}
+
+export async function scheduleNextHydrationReminder(
+  eventAt: Date = new Date(),
+  delayMinutes = DEFAULT_REMINDER_DELAY_MINUTES
+): Promise<{ scheduledFor: string }> {
+  const response = await fetch("/api/push/schedule-next", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      deviceId: getOrCreateDeviceId(),
+      eventAt: eventAt.toISOString(),
+      delayMinutes,
+    }),
+  });
+
+  const body = await response.text();
+  let parsed: { scheduledFor?: string; error?: string } = {};
+
+  if (body) {
+    try {
+      parsed = JSON.parse(body) as { scheduledFor?: string; error?: string };
+    } catch {
+      // Ignore parse errors and fallback to raw body message.
+    }
+  }
+
+  if (!response.ok) {
+    throw new PushApiError(response.status, parsed.error || body || `Request failed: ${response.status}`);
+  }
+
+  return {
+    scheduledFor: parsed.scheduledFor ?? "",
+  };
 }
 
 export async function unsubscribeFromPush(): Promise<void> {

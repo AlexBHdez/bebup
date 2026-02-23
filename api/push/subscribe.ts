@@ -7,7 +7,6 @@ const subscribeSchema = z.object({
   timezone: z.string().min(1),
   settings: z.object({
     remindersEnabled: z.boolean(),
-    reminderInterval: z.number().int().positive(),
     wakeTime: z.string().regex(/^\d{2}:\d{2}$/),
     sleepTime: z.string().regex(/^\d{2}:\d{2}$/),
   }),
@@ -31,23 +30,23 @@ export default async function handler(req: any, res: any) {
       return res.status(400).json({ error: "Invalid payload", details: parsed.error.flatten() });
     }
 
-  const {
-    deviceId,
-    timezone,
-    settings,
-    subscription: {
-      endpoint,
-      keys: { p256dh, auth },
-    },
-  } = parsed.data;
+    const {
+      deviceId,
+      timezone,
+      settings,
+      subscription: {
+        endpoint,
+        keys: { p256dh, auth },
+      },
+    } = parsed.data;
 
     const pool = getDbPool();
 
     await pool.query(
       `
         INSERT INTO push_subscriptions
-        (device_id, endpoint, p256dh, auth, timezone, reminders_enabled, reminder_interval, wake_time, sleep_time, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+        (device_id, endpoint, p256dh, auth, timezone, reminders_enabled, wake_time, sleep_time, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
         ON CONFLICT (endpoint)
         DO UPDATE SET
           device_id = EXCLUDED.device_id,
@@ -55,9 +54,9 @@ export default async function handler(req: any, res: any) {
           auth = EXCLUDED.auth,
           timezone = EXCLUDED.timezone,
           reminders_enabled = EXCLUDED.reminders_enabled,
-          reminder_interval = EXCLUDED.reminder_interval,
           wake_time = EXCLUDED.wake_time,
           sleep_time = EXCLUDED.sleep_time,
+          next_due_at = NULL,
           updated_at = NOW()
       `,
       [
@@ -67,7 +66,6 @@ export default async function handler(req: any, res: any) {
         auth,
         timezone,
         settings.remindersEnabled,
-        settings.reminderInterval,
         settings.wakeTime,
         settings.sleepTime,
       ]

@@ -19,7 +19,7 @@ export default async function handler(req: any, res: any) {
 
     const pool = getDbPool();
     const result = await pool.query(
-      `SELECT endpoint, reminders_enabled, reminder_interval, wake_time, sleep_time, updated_at FROM push_subscriptions WHERE device_id = $1 ORDER BY updated_at DESC LIMIT 1`,
+      `SELECT endpoint, reminders_enabled, wake_time, sleep_time, next_due_at, updated_at FROM push_subscriptions WHERE device_id = $1 ORDER BY updated_at DESC LIMIT 1`,
       [parsed.data.deviceId]
     );
 
