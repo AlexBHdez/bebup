@@ -74,9 +74,9 @@ self.addEventListener("push", (event) => {
       body: event.data ? event.data.text() : undefined,
     };
   }
-  const title = payload.title || "BebUp";
+  const title = payload.title || "Bebup 💧";
   const options = {
-    body: payload.body || "Hora de tomar un vaso de agua 💧",
+    body: payload.body || "Es la hora de tomarte un vaso de agua",
     tag: payload.tag || "bebup-hydration-reminder",
     data: {
       url: payload.url || "/",

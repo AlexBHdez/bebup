@@ -48,8 +48,8 @@ export default async function handler(req: any, res: any) {
             auth: row.auth,
           },
           {
-            title: "BebUp",
-            body: "Hora de tomar un vaso de agua 💧",
+            title: "Bebup 💧",
+            body: "Es la hora de tomarte un vaso de agua",
             tag: "bebup-hydration-reminder",
             url: "/",
           }

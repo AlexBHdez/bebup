@@ -7,8 +7,8 @@ import { sendInternalError } from "../_lib/error.js";
 const sendSchema = z.object({
   endpoint: z.string().url().optional(),
   deviceId: z.string().min(1).optional(),
-  title: z.string().min(1).default("BebUp"),
-  body: z.string().min(1).default("Hora de tomar un vaso de agua 💧"),
+  title: z.string().min(1).default("Bebup 💧"),
+  body: z.string().min(1).default("Es la hora de tomarte un vaso de agua"),
   tag: z.string().optional(),
   url: z.string().optional(),
 });
