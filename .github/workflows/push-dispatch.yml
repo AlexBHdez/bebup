@@ -1,0 +1,44 @@
+name: Push Dispatch
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger push dispatch endpoint
+        env:
+          DISPATCH_URL: ${{ secrets.PUSH_DISPATCH_URL }}
+          DISPATCH_SECRET: ${{ secrets.PUSH_DISPATCH_SECRET }}
+        run: |
+          if [ -z "$DISPATCH_URL" ]; then
+            echo "Missing required secret: PUSH_DISPATCH_URL"
+            exit 1
+          fi
+
+          if [ -z "$DISPATCH_SECRET" ]; then
+            echo "Missing required secret: PUSH_DISPATCH_SECRET"
+            exit 1
+          fi
+
+          response_file=$(mktemp)
+          status_code=$(curl -sS -o "$response_file" -w "%{http_code}" \
+            -X POST "$DISPATCH_URL" \
+            -H "Authorization: Bearer $DISPATCH_SECRET" \
+            -H "Content-Type: application/json")
+
+          echo "HTTP status: $status_code"
+          echo "Response:"
+          cat "$response_file"
+
+          if [ "$status_code" -lt 200 ] || [ "$status_code" -ge 300 ]; then
+            echo "Dispatch request failed"
+            exit 1
+          fi
