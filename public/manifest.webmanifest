@@ -9,21 +9,15 @@
   "lang": "es",
   "icons": [
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/web-app-manifest-192x192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/placeholder.svg",
+      "src": "/icons/web-app-manifest-512x512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "/favicon.ico",
-      "sizes": "48x48",
-      "type": "image/x-icon",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

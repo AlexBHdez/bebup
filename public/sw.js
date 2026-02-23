@@ -1,5 +1,15 @@
-const CACHE_NAME = "bebup-static-v1";
-const APP_SHELL = ["/", "/index.html", "/manifest.webmanifest", "/favicon.ico"];
+const CACHE_NAME = "bebup-static-v3";
+const APP_SHELL = [
+  "/",
+  "/index.html",
+  "/manifest.webmanifest",
+  "/icons/favicon.ico",
+  "/icons/favicon.svg",
+  "/icons/favicon-96x96.png",
+  "/icons/apple-touch-icon.png",
+  "/icons/web-app-manifest-192x192.png",
+  "/icons/web-app-manifest-512x512.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
