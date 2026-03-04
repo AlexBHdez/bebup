@@ -24,3 +24,7 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_next_due_at ON push_subscripti
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_last_sent_at ON push_subscriptions (last_sent_at);
 
 ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- Lock down direct API roles; this table should be managed by trusted backend code.
+REVOKE ALL ON TABLE push_subscriptions FROM anon;
+REVOKE ALL ON TABLE push_subscriptions FROM authenticated;
