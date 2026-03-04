@@ -22,3 +22,5 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_device_id ON push_subscription
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_enabled ON push_subscriptions (reminders_enabled);
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_next_due_at ON push_subscriptions (next_due_at);
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_last_sent_at ON push_subscriptions (last_sent_at);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
